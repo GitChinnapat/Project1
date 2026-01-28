@@ -78,7 +78,7 @@ function RepairStatusPage() {
         details: item.detail,
         userName: item.user_name,
         createdAt: item.created_at,
-        status: 'complete'
+        status: item.status || 'pending'
       }));
 
       // ดึงข้อมูล moving
@@ -94,7 +94,7 @@ function RepairStatusPage() {
         details: item.detail,
         userName: item.user_name,
         createdAt: item.created_at,
-        status: 'inProgress'
+        status: item.status || 'pending'
       }));
 
       // รวมข้อมูล repair และ moving
@@ -122,6 +122,27 @@ function RepairStatusPage() {
     const hours = date.getHours().toString().padStart(2, '0');
     const minutes = date.getMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes} ${day}/${month}/${year}`;
+  };
+
+  // Helper functions for status display
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'complete': return 'bg-green-500 text-white';
+      case 'inProgress': return 'bg-yellow-400 text-[#4E2E16]';
+      case 'cancelled': return 'bg-red-500 text-white';
+      case 'pending':
+      default: return 'bg-gray-400 text-white';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'complete': return 'เสร็จสิ้น';
+      case 'inProgress': return 'กำลังดำเนินการ';
+      case 'cancelled': return 'ยกเลิก';
+      case 'pending':
+      default: return 'รอดำเนินการ';
+    }
   };
 
   return (
@@ -243,9 +264,8 @@ function RepairStatusPage() {
                         <td className="px-4 py-4" style={{ color: '#4E2E16' }}>{item.details}</td>
                         <td className="px-4 py-4 text-center" style={{ color: '#4E2E16' }}>{formatDate(item.createdAt)}</td>
                         <td className="px-4 py-4 text-center">
-                          <span className={`inline-block px-6 py-2 rounded-full font-semibold text-sm ${item.status === 'complete' ? 'bg-green-500 text-white' : 'bg-yellow-400'
-                            }`} style={item.status === 'inProgress' ? { color: '#4E2E16' } : {}}>
-                            {item.status === 'complete' ? 'เสร็จสิ้น' : 'กำลังดำเนินการ'}
+                          <span className={`inline-block px-6 py-2 rounded-full font-semibold text-sm ${getStatusColor(item.status)}`}>
+                            {getStatusText(item.status)}
                           </span>
                         </td>
                       </tr>
@@ -293,9 +313,8 @@ function RepairStatusPage() {
                         <span style={{ color: '#4E2E16' }}>{formatDate(item.createdAt)}</span>
                       </div>
                       <div className="pt-2">
-                        <span className={`inline-block px-6 py-2 rounded-full font-semibold text-sm w-full text-center ${item.status === 'complete' ? 'bg-green-500 text-white' : 'bg-yellow-400'
-                          }`} style={item.status === 'inProgress' ? { color: '#4E2E16' } : {}}>
-                          {item.status === 'complete' ? 'เสร็จสิ้น' : 'กำลังดำเนินการ'}
+                        <span className={`inline-block px-6 py-2 rounded-full font-semibold text-sm w-full text-center ${getStatusColor(item.status)}`}>
+                          {getStatusText(item.status)}
                         </span>
                       </div>
                     </div>
