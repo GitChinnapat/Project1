@@ -1,254 +1,299 @@
-import React, { useState } from 'react';
-import Header from '../components/header';
-import registerBG from '../assets/bg.png';
-export default function RegisterPage() {
-  const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    day: '',
-    month: '',
-    year: '',
-    position: '',
-    phone: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Header from "../components/header";
+import RightImage from "../assets/1.png";
+import registerBG from "../assets/bg.png";
+import { authAPI } from "../services/api";
 
+export default function RegisterPage() {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: "",
+    lastname: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    position: "นักศึกษา",
+    phone: "",
+    date: "",
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    console.log(formData);
-    alert('สมัครสมาชิกเรียบร้อย!');
-  };
+    setError("");
+    setSuccess("");
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+    if (
+      !formData.name ||
+      !formData.lastname ||
+      !formData.email ||
+      !formData.password
+    ) {
+      setError("กรุณากรอกข้อมูลให้ครบถ้วน");
+      return;
+    }
+
+    if (!formData.email.endsWith("@rmuti.ac.th")) {
+      setError("กรุณาใช้อีเมลที่ลงท้ายด้วย @rmuti.ac.th");
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("รหัสผ่านไม่ตรงกัน");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await authAPI.register({
+        name: formData.name,
+        lastname: formData.lastname,
+        email: formData.email,
+        password: formData.password,
+        position: formData.position || null,
+        phone: formData.phone || null,
+        date: formData.date || null,
+      });
+
+      if (response.success) {
+        setSuccess("สมัครสมาชิกสำเร็จ!  กำลังไปหน้าเข้าสู่ระบบ...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
+    } catch (err) {
+      console.error("Register error:", err);
+      setError(err.message || "เกิดข้อผิดพลาดในการสมัครสมาชิก");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen font-['Kanit',sans-serif] bg-[#FDF6ED]" style={{
-      backgroundImage: "url(" + registerBG + ")",
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundAttachment: 'fixed',
-      position: 'relative'
-    }}>
+    <div
+      className="min-h-screen font-['Kanit',sans-serif] bg-[#FDF6ED]"
+      style={{
+        backgroundImage: `url(${registerBG})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      }}
+    >
       <Header />
-      {/* Overlay */}
+
       <div className="fixed inset-0 bg-white/45 pointer-events-none"></div>
-    
-      {/* Main Content */}
-      <main className="relative pt-28 sm:pt-32 md:pt-36 lg:pt-44 xl:pt-32 pb-8 flex justify-center items-center px-4 min-h-screen">
-        <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/90 rounded-3xl shadow-xl overflow-hidden max-w-6xl w-full">
-          {/* Left Image Section */}
-          <div className="relative flex justify-center items-center bg-[#FDF6ED]/70 rounded-3xl p-6 sm:p-8 order-1 lg:order-1">
+
+      <main className="relative pt-28 sm:pt-32 pb-12 px-4 flex justify-center items-center min-h-screen">
+        <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/90 backdrop-blur-md rounded-3xl shadow-xl overflow-hidden max-w-6xl w-full">
+
+          {/* LEFT IMAGE */}
+          <div className="flex justify-center items-center bg-[#FDF6ED]/70 p-8 order-2 lg:order-1">
             <img
-              src="https://cdn.discordapp.com/attachments/1130676495296254035/1431561689500876800/1.png?ex=68fddd37&is=68fc8bb7&hm=3758e396c4f1e2b8d411965da3800b7470f6a00b82bfed7f2bb384cffa468702&"
-              alt="ระบบขอใช้บริการ"
-              className="object-contain w-full max-w-xs sm:max-w-sm lg:max-w-md rounded-3xl"
+              src={RightImage}
+              alt="register img"
+              className="object-contain w-full max-w-sm lg:max-w-md"
             />
           </div>
 
-          {/* Right Register Section */}
-          <div className="p-6 sm:p-8 md:p-10 lg:p-12 bg-[#FDF6ED] order-2 lg:order-2">
+          {/* RIGHT FORM */}
+          <div className="p-8 md:p-10 lg:p-12 bg-[#FDF6ED] order-1 lg:order-2 max-h-[90vh] overflow-y-auto">
             <div className="flex flex-col items-center mb-6">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl text-[#4E2E16] mb-2 font-semibold">สมัครสมาชิก</h2>
+              <div className="w-14 h-14 bg-[#F3D9B0] rounded-full flex items-center justify-center shadow-md mb-4">
+                <svg viewBox="0 0 24 24" className="w-8 h-8 text-[#4E2E16]">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                </svg>
+              </div>
+              <h2 className="text-3xl text-[#4E2E16] font-semibold">
+                สมัครสมาชิก
+              </h2>
             </div>
 
-            {/* Form */}
-            <div className="space-y-3 sm:space-y-4">
-              {/* ชื่อ */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">ชื่อ :</label>
-                <input
-                  type="text"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  placeholder="กรุณากรอกชื่อจริง"
-                  className="w-full px-4 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                />
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {error}
               </div>
+            )}
 
-              {/* นามสกุล */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">นามสกุล :</label>
-                <input
-                  type="text"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  placeholder="กรุณากรอกนามสกุล"
-                  className="w-full px-4 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                />
+            {success && (
+              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded-lg">
+                {success}
               </div>
+            )}
 
-              {/* วัน เดือน ปี */}
-              <div className="grid grid-cols-3 gap-2">
+            {/* FORM GRID */}
+            <form onSubmit={handleRegister} className="space-y-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* ชื่อ */}
                 <div>
-                  <label className="block text-[#4E2E16] font-medium mb-1 text-sm">วัน :</label>
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    ชื่อ :
+                  </label>
                   <input
                     type="text"
-                    name="day"
-                    value={formData.day}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
-                    placeholder="วัน"
-                    className="w-full px-3 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
+                    placeholder="กรุณากรอกชื่อจริง"
+                    className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90"
                   />
                 </div>
+
+                {/* นามสกุล */}
                 <div>
-                  <label className="block text-[#4E2E16] font-medium mb-1 text-sm">เดือน :</label>
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    นามสกุล :
+                  </label>
                   <input
                     type="text"
-                    name="month"
-                    value={formData.month}
+                    name="lastname"
+                    value={formData.lastname}
                     onChange={handleChange}
-                    placeholder="เดือน"
-                    className="w-full px-3 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
+                    placeholder="กรุณากรอกนามสกุล"
+                    className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90"
                   />
                 </div>
+
+                {/* วันเดือนปีเกิด */}
                 <div>
-                  <label className="block text-[#4E2E16] font-medium mb-1 text-sm">ปี :</label>
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    วันเดือนปีเกิด :
+                  </label>
                   <input
-                    type="text"
-                    name="year"
-                    value={formData.year}
+                    type="date"
+                    name="date"
+                    value={formData.date}
                     onChange={handleChange}
-                    placeholder="ปี"
-                    className="w-full px-3 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
+                    className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90"
                   />
+                </div>
+
+
+
+                {/* เบอร์โทร */}
+                <div>
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    เบอร์โทร :
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="กรุณากรอกเบอร์โทรศัพท์"
+                    className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90"
+                  />
+                </div>
+
+                {/* Email → FULL WIDTH */}
+                <div className="md:col-span-2">
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    Email :
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="ลงท้ายด้วย rmuti.ac.th"
+                    className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90"
+                  />
+                </div>
+
+                {/* Password → FULL WIDTH */}
+                <div className="md:col-span-2">
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    Password :
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="กรุณากรอก password"
+                      className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      👁
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password → FULL WIDTH */}
+                <div className="md:col-span-2">
+                  <label className="block mb-1 text-sm text-[#4E2E16]">
+                    ยืนยัน Password :
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="กรุณากรอกยืนยัน password"
+                      className="w-full px-4 py-2.5 rounded-full border border-gray-300 bg-white/90 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      👁
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* ตำแหน่ง */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">ตำแหน่ง :</label>
-                <input
-                  type="text"
-                  name="position"
-                  value={formData.position}
-                  onChange={handleChange}
-                  placeholder="กรุณากรอกตำแหน่ง"
-                  className="w-full px-4 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                />
-              </div>
+              {/* BUTTON */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-[#EFBF86] text-[#4E2E16] font-semibold rounded-full shadow-md hover:bg-[#e7b67f]"
+              >
+                {loading ? "กำลังสมัครสมาชิก..." : "สมัครสมาชิก"}
+              </button>
 
-              {/* เบอร์โทร */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">เบอร์โทร :</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="กรุณากรอกเบอร์โทรศัพท์"
-                  className="w-full px-4 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">Email :</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="ลงท้ายด้วย rmuti.ac.th"
-                  className="w-full px-4 py-2 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">password :</label>
-                <div className="relative">
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="กรุณากรอก password"
-                    className="w-full px-4 py-2 pr-10 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4E2E16]/60 hover:text-[#4E2E16] transition-colors"
-                  >
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* ยืนยัน Password */}
-              <div>
-                <label className="block text-[#4E2E16] font-medium mb-1 text-sm">ยืนยันpassword :</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="กรุณากรอกยืนยัน password"
-                    className="w-full px-4 py-2 pr-10 text-sm rounded-full border border-gray-300 focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none bg-white/90"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4E2E16]/60 hover:text-[#4E2E16] transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-2">
-                <button
-                  onClick={handleSubmit}
-                  className="w-full py-2.5 text-sm sm:text-base bg-[#EFBF86] text-[#4E2E16] font-semibold rounded-full shadow-md hover:shadow-lg hover:bg-[#EFBF86]/90 transition"
+              <p className="text-center mt-4 text-sm text-[#4E2E16]">
+                มีบัญชีอยู่แล้ว?{" "}
+                <Link
+                  to="/login"
+                  className="text-[#6B3E1E] hover:underline font-medium"
                 >
                   เข้าสู่ระบบ
-                </button>
-              </div>
-            </div>
+                </Link>
+              </p>
+            </form>
           </div>
         </div>
       </main>
-
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap');
-      `}</style>
     </div>
   );
 }

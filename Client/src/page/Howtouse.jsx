@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Header from '../components/header';
 import HOWTObg from "../assets/bg.png";
-
+import { useAuth } from "../context/AuthContext";
 export default function ManualPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

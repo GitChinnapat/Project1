@@ -1,33 +1,54 @@
 import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import Header from "../components/header";
 import RightImage from "../assets/1.png";
 import loginBG from "../assets/bg.png";
+import { authAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // ฟังก์ชันเข้าสู่ระบบ
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+
+    // Validate input
     if (!email || !password) {
-      alert("กรุณากรอกอีเมลและรหัสผ่าน");
-      return;
-    }
-    if (!email.endsWith("@rmuti.ac.th")) {
-      alert("กรุณาใช้อีเมลที่ลงท้ายด้วย rmuti.ac.th");
+      setError("กรุณากรอกอีเมลและรหัสผ่าน");
       return;
     }
 
-    // ✅ ตัวอย่างเปลี่ยนหน้า
-    window.location.href = "/register";
-  };
+    if (! email.endsWith("@rmuti.ac.th")) {
+      setError("กรุณาใช้อีเมลที่ลงท้ายด้วย @rmuti.ac.th");
+      return;
+    }
 
-  // ฟังก์ชันสมัครใช้งาน
-  const handleRegister = (e) => {
-    e.preventDefault();
-    window.location.href = "/register";
+    setLoading(true);
+
+    try {
+      const response = await authAPI.login({ email, password });
+
+      if (response. success) {
+        // บันทึกข้อมูลผู้ใช้และ token
+        login(response.user, response.token);
+        
+        // นำไปยังหน้า Repost
+        navigate("/Repost");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message || "อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,6 +67,7 @@ export default function LoginPage() {
       {/* Main Content */}
       <main className="relative pt-20 pb-6 flex justify-center items-center px-4 h-screen overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/90 backdrop-blur-md rounded-3xl shadow-xl overflow-hidden max-w-5xl w-full max-h-[100vh] z-10">
+          
           {/* Left: ฟอร์มเข้าสู่ระบบ */}
           <div className="p-6 md:p-8 bg-[#FDF6ED] order-2 lg:order-1 flex flex-col justify-center">
             <div className="flex flex-col items-center">
@@ -63,6 +85,12 @@ export default function LoginPage() {
               </h2>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
             {/* ฟอร์ม */}
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Email */}
@@ -76,8 +104,12 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="กรุณาใส่ Email ที่ลงท้ายด้วย rmuti.ac.th"
                   className="w-full px-4 py-2.5 text-sm rounded-full border border-[#F3D9B0] focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none"
+                  disabled={loading}
                 />
               </div>
+
+
+
 
               {/* Password */}
               <div>
@@ -91,16 +123,17 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="กรุณากรอกรหัสผ่านให้ถูกต้อง"
                     className="w-full px-4 py-2.5 pr-12 text-sm rounded-full border border-[#F3D9B0] focus:border-[#EFBF86] focus:ring-2 focus:ring-[#F8E9D6] outline-none"
+                    disabled={loading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4E2E16]/60 hover:text-[#4E2E16] transition-colors"
+                    disabled={loading}
                   >
                     {showPassword ? (
-                      // icon ซ่อนรหัส
                       <svg
-                        xmlns="http://www.w3.org/2000/svg"
+                        xmlns="http://www.w3. org/2000/svg"
                         width="22"
                         height="22"
                         viewBox="0 0 24 24"
@@ -110,11 +143,10 @@ export default function LoginPage() {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       >
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                        <path d="M17. 94 17.94A10. 07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18. 5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                         <line x1="1" y1="1" x2="23" y2="23"></line>
                       </svg>
                     ) : (
-                      // icon แสดงรหัส
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="22"
@@ -137,32 +169,31 @@ export default function LoginPage() {
               {/* ปุ่มเข้าสู่ระบบ */}
               <button
                 type="submit"
-                className="w-full py-2.5 bg-[#EFBF86] text-[#4E2E16] font-semibold rounded-full shadow-md hover:bg-[#EFBF86]/90 transition mt-2"
+                disabled={loading}
+                className="w-full py-2.5 bg-[#EFBF86] text-[#4E2E16] font-semibold rounded-full shadow-md hover:bg-[#EFBF86]/90 transition mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                เข้าสู่ระบบ
+                {loading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบ"}
               </button>
 
               <p className="text-center text-[#4E2E16] mt-3 text-sm">
-                <a
-                  href="#"
-                  onClick={handleRegister}
+                <Link
+                  to="/register"
                   className="hover:underline font-medium"
                 >
                   สมัครใช้งาน
-                </a>
+                </Link>
               </p>
             </form>
           </div>
 
-        {/* Right: ภาพ */}
-        <div className="relative flex justify-center items-center bg-[#FDF6ED]/70 rounded-3xl p-8 order-1 lg:order-2">
-          <img
-            src={RightImage}
-            alt="ระบบขอใช้บริการ"
-            className="object-contain w-[100%] sm:w-[110%] lg:w-[100%] max-w-none rounded-3xl "
-          />
-        </div>
-
+          {/* Right: ภาพ */}
+          <div className="relative flex justify-center items-center bg-[#FDF6ED]/70 rounded-3xl p-8 order-1 lg:order-2">
+            <img
+              src={RightImage}
+              alt="ระบบขอใช้บริการ"
+              className="object-contain w-[100%] sm:w-[110%] lg:w-[100%] max-w-none rounded-3xl"
+            />
+          </div>
         </div>
       </main>
     </div>
