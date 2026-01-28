@@ -37,7 +37,7 @@ const createMoving = async (req, res) => {
     }
 
     const query = 'INSERT INTO moving (user_id, user_name, location, type_work, detail, img) VALUES (?, ?, ?, ?, ?, ?)';
-    
+
     console.log('🔄 Executing query with values:', {
       user_id: userId,
       user_name: finalUserName,
@@ -78,7 +78,17 @@ const createMoving = async (req, res) => {
 // Get all moving requests
 const getAllMoving = async (req, res) => {
   try {
-    const query = 'SELECT * FROM moving ORDER BY created_at DESC';
+    const { mode } = req.query;
+    let query = '';
+
+    if (mode === 'report') {
+      // Fetch all for report
+      query = 'SELECT * FROM moving ORDER BY created_at DESC';
+    } else {
+      // Fetch active only (status != 'deleted')
+      query = "SELECT * FROM moving WHERE status != 'deleted' OR status IS NULL ORDER BY created_at DESC";
+    }
+
     const [results] = await db.execute(query);
 
     res.status(200).json({
@@ -129,17 +139,52 @@ const getMovingById = async (req, res) => {
 const updateMoving = async (req, res) => {
   try {
     const { id } = req.params;
-    const { location, type_work, detail } = req.body;
+    const { location, type_work, detail, img, status, approved } = req.body;
 
-    if (!location || !type_work || !detail) {
+    console.log('📝 Updating moving:', { id, status, approved });
+
+    // Build dynamic query based on what fields are provided
+    let updates = [];
+    let values = [];
+
+    if (location !== undefined) {
+      updates.push('location = ?');
+      values.push(location);
+    }
+    if (type_work !== undefined) {
+      updates.push('type_work = ?');
+      values.push(type_work);
+    }
+    if (detail !== undefined) {
+      updates.push('detail = ?');
+      values.push(detail);
+    }
+    if (img !== undefined) {
+      updates.push('img = ?');
+      values.push(img);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+    if (approved !== undefined) {
+      updates.push('approved = ?');
+      values.push(approved ? 1 : 0);
+    }
+
+    if (updates.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'กรุณากรอกข้อมูลที่จำเป็นให้ครบ'
+        message: 'ไม่มีข้อมูลที่จะอัปเดต'
       });
     }
 
-    const query = 'UPDATE moving SET location = ?, type_work = ?, detail = ? WHERE move_id = ?';
-    const [result] = await db.execute(query, [location, type_work, detail, id]);
+    values.push(id);
+    const query = `UPDATE moving SET ${updates.join(', ')} WHERE move_id = ?`;
+
+    console.log('🔄 Executing query:', query, values);
+
+    const [result] = await db.execute(query, values);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -147,6 +192,8 @@ const updateMoving = async (req, res) => {
         message: 'ไม่พบข้อมูลการย้ายของ'
       });
     }
+
+    console.log('✅ Moving updated successfully');
 
     res.status(200).json({
       success: true,
@@ -162,30 +209,36 @@ const updateMoving = async (req, res) => {
   }
 };
 
-// Delete moving
+// Delete moving request
 const deleteMoving = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = 'DELETE FROM moving WHERE move_id = ?';
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Invalid ID' });
+    }
+
+    // Soft delete via status
+    const query = "UPDATE moving SET status = 'deleted' WHERE move_id = ?";
+
     const [result] = await db.execute(query, [id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'ไม่พบข้อมูลการย้ายของ'
+        message: 'Moving request not found'
       });
     }
 
     res.status(200).json({
       success: true,
-      message: 'ลบคำขอย้ายของสำเร็จแล้ว'
+      message: 'Moving request deleted successfully (Soft Delete)'
     });
   } catch (error) {
-    console.error('Error deleting moving:', error);
+    console.error('Error deleting moving request:', error);
     res.status(500).json({
       success: false,
-      message: 'เกิดข้อผิดพลาดในการลบข้อมูล',
+      message: 'Error deleting moving request',
       error: error.message
     });
   }

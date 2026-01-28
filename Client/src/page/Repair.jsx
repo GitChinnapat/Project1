@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/header";
 import { repairAPI, uploadAPI } from "../services/api";
+import { useAuth } from "../context/AuthContext";
 import moveBG from "../assets/bg.png";
 
 export default function RepairPage() {
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [formData, setFormData] = useState({
     location: "",
     jobType: "",
@@ -85,16 +87,16 @@ export default function RepairPage() {
       return;
     }
 
-    // Get user data from localStorage
-    const userData = JSON.parse(localStorage.getItem('user'));
-    console.log('📝 User data from localStorage:', userData);
-
-    if (!userData || !userData.id) {
-      console.log('❌ No user data found in localStorage');
+    // Get user data from AuthContext
+    if (!isAuthenticated || !user || !user.id) {
+      console.log('❌ No user data found in AuthContext');
       setMessage("กรุณาเข้าสู่ระบบก่อนแจ้งซ่อม");
       setMessageType("error");
       return;
     }
+
+    const userData = user;
+    console.log('📝 User data from AuthContext:', userData);
 
     // Validate user data
     const userId = Number(userData.id);

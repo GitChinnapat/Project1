@@ -26,7 +26,7 @@ export default function LoginPage() {
       return;
     }
 
-    if (! email.endsWith("@rmuti.ac.th")) {
+    if (!email.endsWith("@rmuti.ac.th")) {
       setError("กรุณาใช้อีเมลที่ลงท้ายด้วย @rmuti.ac.th");
       return;
     }
@@ -36,12 +36,17 @@ export default function LoginPage() {
     try {
       const response = await authAPI.login({ email, password });
 
-      if (response. success) {
+      if (response.success) {
         // บันทึกข้อมูลผู้ใช้และ token
         login(response.user, response.token);
-        
-        // นำไปยังหน้า Repost
-        navigate("/Repost");
+
+        // ตรวจสอบ position ถ้าเป็น admin ไปหน้า admin
+        if (response.user.position === 'admin') {
+          navigate("/admin");
+        } else {
+          // ผู้ใช้ทั่วไปไปหน้า Repost
+          navigate("/Repost");
+        }
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -67,7 +72,7 @@ export default function LoginPage() {
       {/* Main Content */}
       <main className="relative pt-20 pb-6 flex justify-center items-center px-4 h-screen overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/90 backdrop-blur-md rounded-3xl shadow-xl overflow-hidden max-w-5xl w-full max-h-[100vh] z-10">
-          
+
           {/* Left: ฟอร์มเข้าสู่ระบบ */}
           <div className="p-6 md:p-8 bg-[#FDF6ED] order-2 lg:order-1 flex flex-col justify-center">
             <div className="flex flex-col items-center">

@@ -2,60 +2,50 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { movingAPI } from "../services/api";
 import moveBG from "../assets/bg.png";
+import Swal from 'sweetalert2';
 
 export default function MovingList() {
-  const [movingList, setMovingList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
-
-  useEffect(() => {
-    fetchMovingList();
-  }, []);
-
-  const fetchMovingList = async () => {
-    try {
-      setIsLoading(true);
-      setError("");
-      const response = await movingAPI.getAllMoving();
-      
-      if (response.success) {
-        setMovingList(response.data || []);
-      } else {
-        setError(response.message || "ไม่สามารถดึงข้อมูลได้");
-      }
-    } catch (err) {
-      setError(err.message || "เกิดข้อผิดพลาดในการดึงข้อมูล");
-      console.error("Error fetching moving list:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // ... (skip lines) ...
   const handleDelete = async (moveId) => {
-    if (!window.confirm("คุณต้องการลบการขอย้ายนี้หรือไม่?")) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'คุณแน่ใจหรือไม่?',
+      text: "คุณต้องการลบการขอย้ายนี้หรือไม่?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const response = await movingAPI.deleteMoving(moveId);
-      
+
       if (response.success) {
-        setMessage("ลบการขอย้ายสำเร็จแล้ว");
-        setMessageType("success");
-        setTimeout(() => {
-          setMessage("");
-          fetchMovingList();
-        }, 2000);
+        Swal.fire({
+          icon: 'success',
+          title: 'ลบสำเร็จ',
+          text: 'ลบการขอย้ายสำเร็จแล้ว',
+          showConfirmButton: false,
+          timer: 1500
+        });
+        fetchMovingList();
       } else {
-        setMessage(response.message || "ไม่สามารถลบได้");
-        setMessageType("error");
+        Swal.fire({
+          icon: 'error',
+          title: 'เกิดข้อผิดพลาด',
+          text: response.message || "ไม่สามารถลบได้"
+        });
       }
     } catch (err) {
-      setMessage(err.message || "เกิดข้อผิดพลาดในการลบ");
-      setMessageType("error");
       console.error("Error deleting moving:", err);
+      Swal.fire({
+        icon: 'error',
+        title: 'เกิดข้อผิดพลาด',
+        text: err.message || "เกิดข้อผิดพลาดในการลบ"
+      });
     }
   };
 
@@ -77,9 +67,8 @@ export default function MovingList() {
 
       {/* Message Display */}
       {message && (
-        <div className={`fixed top-20 right-4 left-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 p-4 rounded-lg shadow-lg animate-pulse ${
-          messageType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`}>
+        <div className={`fixed top-20 right-4 left-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 p-4 rounded-lg shadow-lg animate-pulse ${messageType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+          }`}>
           <p className="font-semibold">{message}</p>
         </div>
       )}

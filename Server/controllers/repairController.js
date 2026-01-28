@@ -37,7 +37,7 @@ const createRepair = async (req, res) => {
     }
 
     const query = 'INSERT INTO repair (user_id, user_name, location, type_work, detail, img) VALUES (?, ?, ?, ?, ?, ?)';
-    
+
     console.log('🔄 Executing query with values:', {
       user_id: userId,
       user_name: finalUserName,
@@ -79,7 +79,18 @@ const createRepair = async (req, res) => {
 // Get all repair requests
 const getAllRepairs = async (req, res) => {
   try {
-    const query = 'SELECT * FROM repair';
+    // Check if we want all records (for report) or only active ones
+    const { mode } = req.query;
+    let query = '';
+
+    if (mode === 'report') {
+      // Fetch all (active + deleted)
+      query = 'SELECT * FROM repair ORDER BY created_at DESC';
+    } else {
+      // Active only = status is NOT 'deleted'
+      query = "SELECT * FROM repair WHERE status != 'deleted' OR status IS NULL ORDER BY created_at DESC";
+    }
+
     const [results] = await db.execute(query);
 
     res.status(200).json({
@@ -102,7 +113,7 @@ const getRepairById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = 'SELECT * FROM repair WHERE id = ?';
+    const query = 'SELECT * FROM repair WHERE id_repair = ?';
     const [results] = await db.execute(query, [id]);
 
     if (results.length === 0) {
@@ -131,10 +142,52 @@ const getRepairById = async (req, res) => {
 const updateRepair = async (req, res) => {
   try {
     const { id } = req.params;
-    const { location, type_work, detail, img } = req.body;
+    const { location, type_work, detail, img, status, approved } = req.body;
 
-    const query = 'UPDATE repair SET location = ?, type_work = ?, detail = ?, img = ? WHERE id = ?';
-    const [result] = await db.execute(query, [location, type_work, detail, img || null, id]);
+    console.log('📝 Updating repair:', { id, status, approved });
+
+    // Build dynamic query based on what fields are provided
+    let updates = [];
+    let values = [];
+
+    if (location !== undefined) {
+      updates.push('location = ?');
+      values.push(location);
+    }
+    if (type_work !== undefined) {
+      updates.push('type_work = ?');
+      values.push(type_work);
+    }
+    if (detail !== undefined) {
+      updates.push('detail = ?');
+      values.push(detail);
+    }
+    if (img !== undefined) {
+      updates.push('img = ?');
+      values.push(img);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+    if (approved !== undefined) {
+      updates.push('approved = ?');
+      values.push(approved ? 1 : 0);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'ไม่มีข้อมูลที่จะอัปเดต'
+      });
+    }
+
+    values.push(id);
+    const query = `UPDATE repair SET ${updates.join(', ')} WHERE id_repair = ?`;
+
+    console.log('🔄 Executing query:', query, values);
+
+    const [result] = await db.execute(query, values);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -142,6 +195,8 @@ const updateRepair = async (req, res) => {
         message: 'ไม่พบข้อมูลแจ้งซ่อม'
       });
     }
+
+    console.log('✅ Repair updated successfully');
 
     res.status(200).json({
       success: true,
@@ -157,12 +212,21 @@ const updateRepair = async (req, res) => {
   }
 };
 
-// Delete repair request
+// Delete repair request (Soft Delete via Status)
 const deleteRepair = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const query = 'DELETE FROM repair WHERE id = ?';
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'รหัสแจ้งซ่อมไม่ถูกต้อง'
+      });
+    }
+
+    // Soft delete by updating status
+    const query = "UPDATE repair SET status = 'deleted' WHERE id_repair = ?";
+
     const [result] = await db.execute(query, [id]);
 
     if (result.affectedRows === 0) {
@@ -174,13 +238,13 @@ const deleteRepair = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'ลบข้อมูลแจ้งซ่อมเรียบร้อยแล้ว'
+      message: 'ลบข้อมูลเรียบร้อยแล้ว (Soft Delete)'
     });
   } catch (error) {
     console.error('Error deleting repair:', error);
     res.status(500).json({
       success: false,
-      message: 'เกิดข้อผิดพลาดในการลบ',
+      message: 'เกิดข้อผิดพลาดในการลบข้อมูล',
       error: error.message
     });
   }

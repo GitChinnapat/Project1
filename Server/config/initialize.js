@@ -15,6 +15,8 @@ const initializeDatabase = async () => {
         type_work VARCHAR(100) NOT NULL COMMENT 'ประเภทงาน',
         detail TEXT NOT NULL COMMENT 'รายละเอียด',
         img LONGTEXT COMMENT 'รูปภาพ',
+        status VARCHAR(50) DEFAULT 'pending' COMMENT 'สถานะ: pending, inProgress, completed',
+        approved TINYINT(1) DEFAULT 0 COMMENT 'อนุมัติหรือยัง: 0=ยังไม่อนุมัติ, 1=อนุมัติแล้ว',
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'วันที่สร้าง',
         PRIMARY KEY (id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -23,6 +25,21 @@ const initializeDatabase = async () => {
     try {
       await db.execute(createRepairTable);
       console.log('✅ Repair table created or already exists');
+
+      // Add status and approved columns if they don't exist
+      try {
+        await db.execute(`ALTER TABLE repair ADD COLUMN status VARCHAR(50) DEFAULT 'pending' COMMENT 'สถานะ'`);
+        console.log('✅ Added status column to repair table');
+      } catch (e) {
+        // Column might already exist
+      }
+
+      try {
+        await db.execute(`ALTER TABLE repair ADD COLUMN approved TINYINT(1) DEFAULT 0 COMMENT 'อนุมัติหรือยัง'`);
+        console.log('✅ Added approved column to repair table');
+      } catch (e) {
+        // Column might already exist
+      }
     } catch (tableError) {
       console.warn('⚠️  Could not create repair table:', tableError.message);
       console.warn('❌ Please create the table manually using: Server/database.sql');
@@ -38,6 +55,8 @@ const initializeDatabase = async () => {
         type_work VARCHAR(100) NOT NULL COMMENT 'ประเภทงาน',
         detail TEXT NOT NULL COMMENT 'รายละเอียด',
         img LONGTEXT COMMENT 'รูปภาพ',
+        status VARCHAR(50) DEFAULT 'pending' COMMENT 'สถานะ: pending, inProgress, completed',
+        approved TINYINT(1) DEFAULT 0 COMMENT 'อนุมัติหรือยัง: 0=ยังไม่อนุมัติ, 1=อนุมัติแล้ว',
         created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'วันที่สร้าง',
         PRIMARY KEY (move_id)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -46,6 +65,21 @@ const initializeDatabase = async () => {
     try {
       await db.execute(createMovingTable);
       console.log('✅ Moving table created or already exists');
+
+      // Add status and approved columns if they don't exist
+      try {
+        await db.execute(`ALTER TABLE moving ADD COLUMN status VARCHAR(50) DEFAULT 'pending' COMMENT 'สถานะ'`);
+        console.log('✅ Added status column to moving table');
+      } catch (e) {
+        // Column might already exist
+      }
+
+      try {
+        await db.execute(`ALTER TABLE moving ADD COLUMN approved TINYINT(1) DEFAULT 0 COMMENT 'อนุมัติหรือยัง'`);
+        console.log('✅ Added approved column to moving table');
+      } catch (e) {
+        // Column might already exist
+      }
     } catch (tableError) {
       console.warn('⚠️  Could not create moving table:', tableError.message);
       console.warn('❌ Please create the table manually');

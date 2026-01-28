@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/header";
 import { repairAPI } from "../services/api";
 import moveBG from "../assets/bg.png";
+import Swal from 'sweetalert2';
 
 export default function RepairListPage() {
   const [repairs, setRepairs] = useState([]);
@@ -38,20 +39,38 @@ export default function RepairListPage() {
   };
 
   const handleDelete = async (repairId) => {
-    if (window.confirm("คุณแน่ใจว่าต้องการลบการแจ้งซ่อมนี้หรือไม่?")) {
+    const result = await Swal.fire({
+      title: 'คุณแน่ใจหรือไม่?',
+      text: "คุณต้องการลบการแจ้งซ่อมนี้ใช่หรือไม่?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'ลบข้อมูล',
+      cancelButtonText: 'ยกเลิก'
+    });
+
+    if (result.isConfirmed) {
       try {
         const response = await repairAPI.deleteRepair(repairId);
 
         if (response.success) {
-          setMessage("ลบข้อมูลแจ้งซ่อมเรียบร้อยแล้ว");
-          setMessageType("success");
-          fetchRepairs();
+          Swal.fire({
+            icon: 'success',
+            title: 'ลบสำเร็จ',
+            text: 'ลบข้อมูลการแจ้งซ่อมเรียบร้อยแล้ว',
+            showConfirmButton: false,
+            timer: 1500
+          });
+          fetchRepairs(); // Refresh the list after successful deletion
         } else {
-          setMessage(response.message || "ไม่สามารถลบได้");
-          setMessageType("error");
+          Swal.fire({
+            icon: 'error',
+            title: 'เกิดข้อผิดพลาด',
+            text: response.message || 'ไม่สามารถลบข้อมูลได้'
+          });
         }
       } catch (error) {
-        setMessage("เกิดข้อผิดพลาดในการลบ");
         setMessageType("error");
       }
     }
@@ -76,11 +95,10 @@ export default function RepairListPage() {
           {/* Alert Messages */}
           {message && (
             <div
-              className={`mb-6 p-4 rounded-lg text-white font-semibold ${
-                messageType === "success"
-                  ? "bg-green-500 shadow-lg"
-                  : "bg-red-500 shadow-lg"
-              }`}
+              className={`mb-6 p-4 rounded-lg text-white font-semibold ${messageType === "success"
+                ? "bg-green-500 shadow-lg"
+                : "bg-red-500 shadow-lg"
+                }`}
             >
               {message}
             </div>

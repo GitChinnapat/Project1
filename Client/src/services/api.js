@@ -31,7 +31,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Token expired or invalid
       sessionStorage.removeItem('token');
-      window.location.href = '/RMUTI/login';
+      window.location.href = '/login';
     }
     return Promise.reject(error);
   }
@@ -62,7 +62,7 @@ export const authAPI = {
 
   logout: () => {
     sessionStorage.removeItem('token');
-    window.location.href = '/RMUTI/login';
+    window.location.href = '/login';
   },
 
   getCurrentUser: async () => {
@@ -80,7 +80,8 @@ export const usersAPI = {
   getAllUsers: async () => {
     try {
       const response = await api.get('/users');
-      return response.data;
+      // Fix: return the users array directly
+      return response.data.users || [];
     } catch (error) {
       throw error.response?.data || { message: 'เกิดข้อผิดพลาด' };
     }

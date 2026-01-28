@@ -40,9 +40,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('🔐 Logging out - clearing all data');
     setUser(null);
     setIsAuthenticated(false);
-    sessionStorage.removeItem('token');
+    // Clear all storage
+    sessionStorage.clear();
     localStorage.clear();
   };
 
@@ -55,7 +57,12 @@ export const AuthProvider = ({ children }) => {
       if (isAuthenticated) {
         timeoutId = setTimeout(() => {
           logout();
-          alert("หมดเวลาการใช้งาน กรุณาเข้าสู่ระบบใหม่");
+          Swal.fire({
+            icon: 'info',
+            title: 'หมดเวลาการใช้งาน',
+            text: 'กรุณาเข้าสู่ระบบใหม่เพื่อความปลอดภัย',
+            confirmButtonColor: '#8B4513'
+          });
           navigate('/login');
         }, 10 * 60 * 1000); // 10 minutes
       }
