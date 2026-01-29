@@ -318,45 +318,55 @@ function RepairStatusPage() {
               {/* Mobile Cards */}
               <div className="lg:hidden space-y-4">
                 {allRequests.map((item) => (
-                  <div key={`${item.type}-${item.id}`} className="bg-white/80 rounded-2xl p-4 shadow-lg">
-                    <img
-                      src={item.image}
-                      alt="สถานที่"
-                      className="w-full h-40 object-cover rounded-lg mb-3"
-                      onError={(e) => {
-                        e.target.src = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop";
-                      }}
-                    />
-                    <div className="space-y-2 text-sm">
+                  <div key={`${item.type}-${item.id}`} className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-[#E59A5D]/30 transition-all hover:shadow-xl">
 
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>อาคาร/สถานที่:</span>
-                        <span style={{ color: '#4E2E16' }}>{item.building}</span>
+                    {/* Image Header */}
+                    <div
+                      className="relative w-full h-48 rounded-xl overflow-hidden mb-4 group cursor-zoom-in shadow-md"
+                      onClick={() => setSelectedImage(item.image)}
+                    >
+                      <img
+                        src={item.image}
+                        alt="สถานที่"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        onError={(e) => {
+                          e.target.src = "https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=150&fit=crop";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <svg className="w-8 h-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>ประเภทการแจ้ง:</span>
-                        <span style={{ color: '#4E2E16' }}>{item.type === 'repair' ? 'แจ้งปัญหา' : 'แจ้งขนย้าย'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>ชื่อผู้ใช้งาน:</span>
-                        <span style={{ color: '#4E2E16' }}>{item.userName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>ประเภทงาน:</span>
-                        <span style={{ color: '#4E2E16' }}>{item.jobType}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>รายละเอียด:</span>
-                        <span style={{ color: '#4E2E16' }}>{item.details}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="font-medium" style={{ color: '#6B3E1E' }}>เวลาที่แจ้ง:</span>
-                        <span style={{ color: '#4E2E16' }}>{formatDate(item.createdAt)}</span>
-                      </div>
-                      <div className="pt-2">
-                        <span className={`inline-block px-6 py-2 rounded-full font-semibold text-sm w-full text-center ${getStatusColor(item.status)}`}>
-                          {getStatusText(item.status)}
+                      <div className="absolute top-2 right-2">
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold shadow-sm ${item.type === 'repair' ? 'bg-orange-100/90 text-orange-700' : 'bg-blue-100/90 text-blue-700'}`}>
+                          {item.type === 'repair' ? 'แจ้งซ่อม' : 'แจ้งขนย้าย'}
                         </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-lg font-bold text-[#4E2E16]">{item.building}</h3>
+                          <p className="text-sm text-[#8B6E47] font-medium">{item.jobType}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(item.status)}`}>
+                            {getStatusText(item.status)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="bg-[#FDF6ED] p-3 rounded-lg border border-[#F3D9B0]">
+                        <p className="text-sm text-[#4E2E16]"><span className="font-semibold mr-1">รายละเอียด:</span>{item.details}</p>
+                      </div>
+
+                      <div className="flex justify-between items-center text-xs text-[#8B6E47] pt-2 border-t border-[#E59A5D]/20">
+                        <div className="flex items-center gap-1">
+                          <span>👤 {item.userName}</span>
+                        </div>
+                        <div>
+                          🕒 {formatDate(item.createdAt)}
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -584,12 +584,13 @@ function AdminPage() {
                                 </span>
                             </div>
 
-                            {/* Desktop Table View */}
+                            {/* Desktop Table View - Added Image Column */}
                             <div className="hidden md:block overflow-x-auto custom-scrollbar">
                                 <table className="w-full min-w-[1000px]">
                                     <thead>
                                         <tr className="bg-[#FDF6ED]">
                                             <th className="px-6 py-4 text-left font-semibold text-[#4E2E16] w-24">ID</th>
+                                            <th className="px-4 py-4 text-left font-semibold text-[#4E2E16] w-28">รูป</th>
                                             <th className="px-4 py-4 text-left font-semibold text-[#4E2E16] w-32">วันที่แจ้ง</th>
                                             <th className="px-4 py-4 text-left font-semibold text-[#4E2E16] w-48">สถานที่</th>
                                             <th className="px-4 py-4 text-left font-semibold text-[#4E2E16]">งาน</th>
@@ -601,6 +602,15 @@ function AdminPage() {
                                         {(reportTab === 'repairs' ? reportRepairs : reportMovings).map((item, index) => (
                                             <tr key={index} className={`border-b border-gray-100 ${item.status === 'deleted' ? 'bg-red-50/50' : (index % 2 === 0 ? 'bg-white' : 'bg-[#FDF6ED]/50')} hover:bg-orange-50/30`}>
                                                 <td className="px-6 py-4 text-[#8B6E47] font-mono">#{item.id_repair || item.move_id}</td>
+                                                <td className="px-4 py-4">
+                                                    <div className="w-16 h-12 rounded-lg overflow-hidden cursor-zoom-in shadow-sm hover:scale-105 transition-transform" onClick={() => setSelectedImage(item.img ? `http://localhost:5000${item.img}` : (reportTab === 'repairs' ? "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=80&fit=crop" : "https://images.unsplash.com/photo-1600993463592-0f390e71b63f?w=100&h=80&fit=crop"))}>
+                                                        <img
+                                                            src={item.img ? `http://localhost:5000${item.img}` : (reportTab === 'repairs' ? "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=80&fit=crop" : "https://images.unsplash.com/photo-1600993463592-0f390e71b63f?w=100&h=80&fit=crop")}
+                                                            className="w-full h-full object-cover"
+                                                            alt="thumbnail"
+                                                        />
+                                                    </div>
+                                                </td>
                                                 <td className="px-4 py-4 text-sm text-[#4E2E16]">{new Date(item.created_at).toLocaleDateString('th-TH')}</td>
                                                 <td className="px-4 py-4 font-medium text-[#4E2E16]">{item.location}</td>
                                                 <td className="px-4 py-4 text-[#4E2E16]">{reportTab === 'repairs' ? translateRepairType(item.type_work) : translateMovingType(item.type_work)}</td>
@@ -625,7 +635,7 @@ function AdminPage() {
                                 </table>
                             </div>
 
-                            {/* Mobile Card Layout */}
+                            {/* Mobile Card Layout - With Image */}
                             <div className="md:hidden bg-[#F9F5F1] p-4 space-y-3">
                                 {(reportTab === 'repairs' ? reportRepairs : reportMovings).map((item, index) => (
                                     <div key={index} className={`bg-white rounded-xl shadow-sm border p-4 ${item.status === 'deleted' ? 'border-red-200 bg-red-50/30' : 'border-[#EFBF86]/30'}`}>
@@ -633,17 +643,21 @@ function AdminPage() {
                                             <span className="font-mono text-xs text-[#8B6E47] bg-[#FDF6ED] px-2 py-0.5 rounded">#{item.id_repair || item.move_id}</span>
                                             <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString('th-TH')}</span>
                                         </div>
-                                        <div className="flex gap-3">
-                                            {/* Icon Placeholder based on Type */}
-                                            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#F8E9D6] text-[#8B4513]">
-                                                {reportTab === 'repairs' ? (
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" /></svg>
-                                                ) : (
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m2 2a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
-                                                )}
+                                        <div className="flex gap-4">
+                                            {/* Image Thumbnail */}
+                                            <div
+                                                className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 cursor-zoom-in shadow-sm bg-gray-100"
+                                                onClick={() => setSelectedImage(item.img ? `http://localhost:5000${item.img}` : (reportTab === 'repairs' ? "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=80&fit=crop" : "https://images.unsplash.com/photo-1600993463592-0f390e71b63f?w=100&h=80&fit=crop"))}
+                                            >
+                                                <img
+                                                    src={item.img ? `http://localhost:5000${item.img}` : (reportTab === 'repairs' ? "https://images.unsplash.com/photo-1497366216548-37526070297c?w=100&h=80&fit=crop" : "https://images.unsplash.com/photo-1600993463592-0f390e71b63f?w=100&h=80&fit=crop")}
+                                                    className="w-full h-full object-cover"
+                                                    alt="thumbnail"
+                                                />
                                             </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-[#4E2E16] text-sm">{item.location}</h4>
+
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-bold text-[#4E2E16] text-sm truncate">{item.location}</h4>
                                                 <p className="text-xs text-[#8B4513] mt-0.5">{reportTab === 'repairs' ? translateRepairType(item.type_work) : translateMovingType(item.type_work)}</p>
                                                 <div className="flex items-center justify-between mt-3">
                                                     <div className="flex items-center gap-1.5 text-xs text-gray-500">
